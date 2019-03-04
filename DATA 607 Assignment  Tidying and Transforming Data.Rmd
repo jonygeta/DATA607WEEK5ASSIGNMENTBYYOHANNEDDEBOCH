@@ -1,0 +1,83 @@
+---
+title: "DATA 607 Assignment – Tidying and Transforming Data"
+author: "Yohannes Deboch"
+date: "March 3, 2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+```{r}
+library(tidyr)
+library(dplyr)
+library(ggplot2)
+```
+
+
+The chart above describes arrival delays for two airlines across five destinations. Your task is to:
+(1) Create a .CSV file (or optionally, a MySQL database!) that includes all of the information above.
+You’re encouraged to use a “wide” structure similar to how the information appears above, so
+that you can practice tidying and transformations as described below.
+(2) Read the information from your .CSV file into R, and use tidyr and dplyr as needed to tidy
+and transform your data.
+Read the data.
+```{r}
+dt <- read.csv("Numbersense.csv", stringsAsFactors = FALSE, na.strings = "")
+head(dt)
+```
+Fill the airline columns
+
+```{r}
+dt <- dt %>%
+    fill( X)
+```
+Remove empty rows
+```{r}
+dt <- na.omit(dt)
+head(dt)
+```
+Correct airlines column names
+```{r}
+colnames(dt)[1:2] <- c("Airlines","Status")
+head(dt)
+```
+Transform wide to long format
+```{r}
+dt <- dt %>%
+    gather(Destination, count, 3:7)
+```
+Seperate status column
+
+```{r}
+dt <- dt %>%
+    spread(Status, count)
+```
+
+(3) Perform analysis to compare the arrival delays for the two airlines.
+```{r}
+glimpse(dt)
+```
+Airlines, Destination are string variable, delayed and on time are integer.
+```{r}
+dt %>%
+    group_by(Airlines)%>%
+    summarise(mean = mean(delayed))
+```
+Mean delay of Alaska is 100 and AM WEST is 157. ALASKA airlines has less delay.
+Add total column
+```{r}
+dt$total <- dt$delayed+dt$`on time`
+dt$percent_del <- (dt$delayed/dt$total)*100
+```
+```{r}
+ggplot(data = dt, aes(Destination, percent_del, fill = Airlines))+geom_bar(stat = "identity", position = "dodge")+theme_classic()+ggtitle("Percent Delayed")+ylab("Percent")+theme(plot.title = element_text(hjust = 0.5))
+```
+San Francisco had the most delayed followed by Seattle where Phoenix had the least delayed.
+(4) Your code should be in an R Markdown file, posted to rpubs.com, and should include narrative
+descriptions of your data cleanup work, analysis, and conclusions. Please include in your
+homework submission:
+ The URL to the .Rmd file in your Git Hub repository. and
+  The URL for your rpubs.com web page.
+
+
